@@ -132,7 +132,7 @@ def _compile(ctx, _jars, dep_srcjars, buildijar):
       srcjar_cmd += """
 unzip -o {srcjar} -d {{out}}_tmp_expand_srcjars >/dev/null
 """.format(srcjar = srcjar.path)
-    srcjar_cmd += """find {out}_tmp_expand_srcjars -type f -name "*.scala" > {out}_args/files_from_jar\n"""
+    srcjar_cmd += """find {out}_tmp_expand_srcjars -type f \( -name "*.scala" -o -name "*.java" \) > {out}_args/files_from_jar\n"""
 
   cmd = """
 rm -rf {out}_args
