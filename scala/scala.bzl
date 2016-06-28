@@ -143,7 +143,7 @@ mkdir -p {out}_args
 touch {out}_args/files_from_jar
 mkdir -p {out}_tmp""" + srcjar_cmd + """
 cat {scalac_args} {out}_args/files_from_jar > {out}_args/args
-env JAVACMD={java} {scalac} {jvm_flags} @{out}_args/args
+env JAVACMD={java} {scalac} {scalac_jvm_flags} @{out}_args/args
 # Make jar file deterministic by setting the timestamp of files
 find {out}_tmp -exec touch -t 198001010000 {{}} \;
 touch -t 198001010000 {manifest}
@@ -154,7 +154,7 @@ rm -rf {out}_tmp_expand_srcjars
 """ + ijar_cmd + res_cmd
   cmd = cmd.format(
       java=ctx.file._java.path,
-      jvm_flags=" ".join(["-J" + flag for flag in ctx.attr.jvm_flags]),
+      scalac_jvm_flags=" ".join(["-J" + flag for flag in ctx.attr.scalac_jvm_flags]),
       scalac=ctx.file._scalac.path,
       scalac_args=scalac_args_file.path,
       out=ctx.outputs.jar.path,
@@ -251,10 +251,11 @@ def _write_test_launcher(ctx, jars):
     print("suites attribute is deprecated. All scalatest test suites are run")
 
   content = """#!/bin/bash
-{java} -cp {cp} {name} {args} -C io.bazel.rules.scala.JUnitXmlReporter "$@"
+{java} {scala_jvm_flags} -cp {cp} {name} {args} -C io.bazel.rules.scala.JUnitXmlReporter "$@"
 """
   content = content.format(
       java=ctx.file._java.path,
+      scala_jvm_flags=' '.join(ctx.attr.scala_jvm_flags),
       cp=":".join([j.short_path for j in jars]),
       name=ctx.attr.main_class,
       args="-R \"{path}\" -oWDF".format(path=ctx.outputs.jar.short_path))
@@ -383,11 +384,11 @@ def _scala_repl_impl(ctx):
   rjars += _collect_jars(ctx.attr.runtime_deps).runtime
   classpath = ':'.join(["$0.runfiles/%s/%s" % (ctx.workspace_name, f.short_path) for f in rjars])
   content = """#!/bin/bash
-env JAVACMD=$0.runfiles/{repo}/{java} $0.runfiles/{repo}/{scala} {jvm_flags} -classpath {classpath} {scala_opts} "$@"
+env JAVACMD=$0.runfiles/{repo}/{java} $0.runfiles/{repo}/{scala} {scalac_jvm_flags} -classpath {classpath} {scala_opts} "$@"
 """.format(
     java=ctx.file._java.path,
     repo=ctx.workspace_name,
-    jvm_flags=" ".join(["-J" + flag for flag in ctx.attr.jvm_flags]),
+    scalac_jvm_flags=" ".join(["-J" + flag for flag in ctx.attr.scalac_jvm_flags]),
     scala=ctx.file._scala.path,
     classpath=classpath,
     scala_opts=" ".join(ctx.attr.scalacopts),
@@ -441,7 +442,8 @@ _common_attrs = {
   "data": attr.label_list(allow_files=True, cfg=DATA_CFG),
   "resources": attr.label_list(allow_files=True),
   "scalacopts":attr.string_list(),
-  "jvm_flags": attr.string_list(),
+  "scalac_jvm_flags": attr.string_list(),
+  "scala_jvm_flags": attr.string_list(),
 }
 
 scala_library = rule(
