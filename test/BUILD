@@ -55,6 +55,7 @@ scala_binary(
     name = "ScalaBinary",
     srcs = ["ScalaBinary.scala"],
     main_class = "scala.test.ScalaBinary",
+    print_compile_time = True,
     deps = [":HelloLib", ":MacroTest"],
 )
 
@@ -150,7 +151,7 @@ scala_library(
 #Mix java scala
 scala_library(
     name = "MixJavaScalaLib",
-    srcs = glob(["src/main/scala/scala/test/mix_java_scala/*.scala"]) + 
+    srcs = glob(["src/main/scala/scala/test/mix_java_scala/*.scala"]) +
            glob(["src/main/scala/scala/test/mix_java_scala/*.java"]),
 )
 #needed to test java sources are compiled
