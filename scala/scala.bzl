@@ -211,6 +211,7 @@ SourceJars: {srcjars}
            [ctx.outputs.manifest,
             ctx.file._ijar,
             ctx.file._java,
+            ctx.file._javac,
             argfile])
     ctx.action(
         inputs=ins,
